@@ -20,8 +20,11 @@ A pipeline-like software rendering frame
 * 完整的几何细分和LOD支持
 
 相关文章：
+
 [软光栅化渲染器学习笔记（一）：简单几何图元](https://illurin.github.io/2022/10/15/renderer01/)
+
 [软光栅化渲染器学习笔记（二）：深入光栅化细节](https://illurin.github.io/2022/10/15/renderer02/)
+
 [软光栅化渲染器学习笔记（三）：细分几何](https://illurin.github.io/2022/10/16/renderer03/)
 
 # Core 核心部分
