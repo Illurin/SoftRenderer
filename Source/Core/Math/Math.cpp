@@ -1,6 +1,4 @@
-#pragma once
-#include <math.h>
-#include <vector>
+#include "Math.h"
 
 float min(float a, float b) {
 	return a < b ? a : b;
@@ -16,10 +14,12 @@ float saturate(float a) {
 	return a;
 }
 
-void swap(float& a, float& b) {
-	float temp = a;
-	a = b;
-	b = temp;
+Vector3f saturate(const Vector3f& v) {
+	return Vector3f(saturate(v.x), saturate(v.y), saturate(v.z));
+}
+
+Vector4f saturate(const Vector4f& v) {
+	return Vector4f(saturate(v.x), saturate(v.y), saturate(v.z), saturate(v.w));
 }
 
 long Factorial(size_t n) {
@@ -30,11 +30,19 @@ long Factorial(size_t n) {
 	return result;
 }
 
-struct Vector2i {
-	Vector2i() {}
-	Vector2i(int x, int y) : x(x), y(y) {}
-	int x = 0, y = 0;
-};
+float Vector2f::Length()const { return sqrtf(x * x + y * y); }
+float Vector3f::Length()const { return sqrtf(x * x + y * y + z * z); }
+float Vector4f::Length()const { return sqrtf(x * x + y * y + z * z); }
+
+Vector3f Vector3f::Normalize()const {
+	float length = Length();
+	return Vector3f(x / length, y / length, z / length);
+}
+
+Vector4f Vector4f::Normalize()const {
+	float length = Length();
+	return Vector4f(x / length, y / length, z / length, w);
+}
 
 Vector2i operator+(const Vector2i& v0, const Vector2i& v1) {
 	return Vector2i(v0.x + v1.x, v0.y + v1.y);
@@ -44,16 +52,6 @@ Vector2i operator-(const Vector2i& v0, const Vector2i& v1) {
 	return Vector2i(v0.x - v1.x, v0.y - v1.y);
 }
 
-struct Vector2f {
-	Vector2f() {}
-	Vector2f(float x, float y) : x(x), y(y) {}
-	float x = 0.0f, y = 0.0f;
-
-	float Length() {
-		return sqrtf(x * x + y * y);
-	}
-};
-
 Vector2f operator*(const float& a, const Vector2f& v) {
 	return Vector2f(a * v.x, a * v.y);
 }
@@ -61,28 +59,6 @@ Vector2f operator*(const float& a, const Vector2f& v) {
 Vector2f operator+(const Vector2f& v0, const Vector2f& v1) {
 	return Vector2f(v0.x + v1.x, v0.y + v1.y);
 }
-
-struct Vector3i {
-	Vector3i() {}
-	Vector3i(int x, int y, int z) : x(x), y(y), z(z) {}
-	int x = 0, y = 0, z = 0;
-};
-
-struct Vector3f {
-	Vector3f() {}
-	Vector3f(float a) : x(a), y(a), z(a) {}
-	Vector3f(float x, float y, float z) : x(x), y(y), z(z) {}
-	float x = 0.0f, y = 0.0f, z = 0.0f;
-
-	float Length() {
-		return sqrtf(x * x + y * y + z * z);
-	}
-
-	Vector3f Normalize() {
-		float length = Length();
-		return Vector3f(x / length, y / length, z / length);
-	}
-};
 
 Vector3f operator-(const Vector3f& v) {
 	return Vector3f(-v.x, -v.y, -v.z);
@@ -108,29 +84,6 @@ Vector3f operator/(const Vector3f& v, const float& a) {
 	return Vector3f(v.x / a, v.y / a, v.z / a);
 }
 
-Vector3f saturate(const Vector3f& v) {
-	return Vector3f(saturate(v.x), saturate(v.y), saturate(v.z));
-}
-
-struct Vector4f {
-	Vector4f() {}
-	Vector4f(Vector3f v, float w) : x(v.x), y(v.y), z(v.z), w(w) {}
-	Vector4f(float a) : x(a), y(a), z(a), w(a) {}
-	Vector4f(float x, float y, float z, float w) : x(x), y(y), z(z), w(w) {}
-	Vector3f GetVector3f()const { return Vector3f(x, y, z); }
-
-	float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
-
-	float Length() {
-		return sqrtf(x * x + y * y + z * z);
-	}
-
-	Vector4f Normalize() {
-		float length = Length();
-		return Vector4f(x / length, y / length, z / length, w);
-	}
-};
-
 Vector4f operator+(const Vector4f& v0, const Vector4f& v1) {
 	return Vector4f(v0.x + v1.x, v0.y + v1.y, v0.z + v1.z, v0.w + v1.w);
 }
@@ -147,8 +100,46 @@ Vector4f operator*(const Vector4f& v0, const Vector4f& v1) {
 	return Vector4f(v0.x * v1.x, v0.y * v1.y, v0.z * v1.z, v0.w * v1.w);
 }
 
-Vector4f saturate(const Vector4f& v) {
-	return Vector4f(saturate(v.x), saturate(v.y), saturate(v.z), saturate(v.w));
+Matrix3x3f operator+(const Matrix3x3f m0, const Matrix3x3f m1) {
+	return Matrix3x3f(
+		m0.GetRowVector1() + m1.GetRowVector1(),
+		m0.GetRowVector2() + m1.GetRowVector2(),
+		m0.GetRowVector3() + m1.GetRowVector3()
+	);
+}
+
+Matrix3x3f operator*(float a, Matrix3x3f m) {
+	return Matrix3x3f(
+		a * m.GetRowVector1(),
+		a * m.GetRowVector2(),
+		a * m.GetRowVector3()
+	);
+}
+
+Matrix4x4f operator+(const Matrix4x4f m0, const Matrix4x4f m1) {
+	return Matrix4x4f(
+		m0.GetRowVector1() + m1.GetRowVector1(),
+		m0.GetRowVector2() + m1.GetRowVector2(),
+		m0.GetRowVector3() + m1.GetRowVector3(),
+		m0.GetRowVector4() + m1.GetRowVector4()
+	);
+}
+
+Matrix4x4f operator*(float a, Matrix4x4f m) {
+	return Matrix4x4f(
+		a * m.GetRowVector1(),
+		a * m.GetRowVector2(),
+		a * m.GetRowVector3(),
+		a * m.GetRowVector4()
+	);
+}
+
+float Dot(Vector3f v0, Vector3f v1) {
+	return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
+}
+
+float Dot(Vector4f v0, Vector4f v1) {
+	return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z + v0.w * v1.w;
 }
 
 Vector3i Cross(Vector3i v0, Vector3i v1) {
@@ -165,14 +156,6 @@ Vector3f Cross(Vector3f v0, Vector3f v1) {
 	v.y = v0.z * v1.x - v0.x * v1.z;
 	v.z = v0.x * v1.y - v0.y * v1.x;
 	return v;
-}
-
-float Dot(Vector3f v0, Vector3f v1) {
-	return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z;
-}
-
-float Dot(Vector4f v0, Vector4f v1) {
-	return v0.x * v1.x + v0.y * v1.y + v0.z * v1.z + v0.w * v1.w;
 }
 
 float Lerp(float v0, float v1, float percent) {
@@ -219,13 +202,6 @@ float Schlick(float cosine, float refIndex) {
 	R0 *= R0;
 	return R0 + (1.0f - R0) * powf((1.0f - cosf(cosine)), 5.0f);
 }
-
-struct Vertex {
-	Vector4f position;
-	Vector4f color;
-	Vector2f texCoord;
-	Vector3f normal;
-};
 
 Vertex VertexInterplote(const Vertex& v0, const Vertex& v1, float percent) {
 	Vertex v;
@@ -277,63 +253,11 @@ Vector4f PerspectiveCorrectInterpolate(float z1, float z2, float z3, Vector4f n1
 	return nt;
 }
 
-struct Matrix3x3f {
-	Matrix3x3f() {}
-	Matrix3x3f(float value) : a1(value), b2(value), c3(value) {}
-	Matrix3x3f(Vector3f v1, Vector3f v2, Vector3f v3) {
-		a1 = v1.x, a2 = v1.y, a3 = v1.z;
-		b1 = v2.x, b2 = v2.y, b3 = v2.z;
-		c1 = v3.x, c2 = v3.y, c3 = v3.z;
-	}
-
-	Matrix3x3f Transpose()const {
-		return Matrix3x3f(
-			GetColumnVector1(),
-			GetColumnVector2(),
-			GetColumnVector3()
-		);
-	}
-
-	float Determinant()const {
-		return a1 * (b2 * c3 - b3 * c2) - a2 * (b1 * c3 - b3 * c1) + a3 * (b1 * c2 - b2 * c1);
-	}
-
-	Matrix3x3f Adjoint()const {
-		return Matrix3x3f(
-			Vector3f(b2 * c3 - b3 * c2, -b1 * c3 + b3 * c1, b1 * c2 - b2 * c1),
-			Vector3f(-a2 * c3 + a3 * c2, a1 * c3 - a3 * c1, -a1 * c2 + a2 * c1),
-			Vector3f(a2 * b3 - a3 * b2, -a1 * b3 + a3 * b1, a1 * b2 - a2 * b1)
-		);
-	}
-
-	Matrix3x3f Inverse()const;
-
-	Vector3f GetRowVector1()const { return Vector3f(a1, a2, a3); }
-	Vector3f GetRowVector2()const { return Vector3f(b1, b2, b3); }
-	Vector3f GetRowVector3()const { return Vector3f(c1, c2, c3); }
-
-	Vector3f GetColumnVector1()const { return Vector3f(a1, b1, c1); }
-	Vector3f GetColumnVector2()const { return Vector3f(a2, b2, c2); }
-	Vector3f GetColumnVector3()const { return Vector3f(a3, b3, c3); }
-
-	float a1 = 0.0f, a2 = 0.0f, a3 = 0.0f;
-	float b1 = 0.0f, b2 = 0.0f, b3 = 0.0f;
-	float c1 = 0.0f, c2 = 0.0f, c3 = 0.0f;
-};
-
-Matrix3x3f operator+(const Matrix3x3f m0, const Matrix3x3f m1) {
+Matrix3x3f Matrix4x4f::GetMatrix3x3f()const {
 	return Matrix3x3f(
-		m0.GetRowVector1() + m1.GetRowVector1(),
-		m0.GetRowVector2() + m1.GetRowVector2(),
-		m0.GetRowVector3() + m1.GetRowVector3()
-	);
-}
-
-Matrix3x3f operator*(float a, Matrix3x3f m) {
-	return Matrix3x3f(
-		a * m.GetRowVector1(),
-		a * m.GetRowVector2(),
-		a * m.GetRowVector3()
+		GetRowVector1().GetVector3f(),
+		GetRowVector2().GetVector3f(),
+		GetRowVector3().GetVector3f()
 	);
 }
 
@@ -342,104 +266,6 @@ Vector3f Multiply(Vector3f v, Matrix3x3f m) {
 		Dot(v, m.GetColumnVector1()),
 		Dot(v, m.GetColumnVector2()),
 		Dot(v, m.GetColumnVector3())
-	);
-}
-
-Matrix3x3f Matrix3x3f::Inverse()const {
-	return 1.0f / Determinant() * Adjoint();
-}
-
-struct Matrix4x4f {
-	Matrix4x4f() {}
-	Matrix4x4f(float value) : a1(value), b2(value), c3(value), d4(value) {}
-	Matrix4x4f(Vector4f v1, Vector4f v2, Vector4f v3, Vector4f v4) {
-		a1 = v1.x, a2 = v1.y, a3 = v1.z, a4 = v1.w;
-		b1 = v2.x, b2 = v2.y, b3 = v2.z, b4 = v2.w;
-		c1 = v3.x, c2 = v3.y, c3 = v3.z, c4 = v3.w;
-		d1 = v4.x, d2 = v4.y, d3 = v4.z, d4 = v4.w;
-	}
-
-	Matrix3x3f GetMatrix3x3f()const {
-		return Matrix3x3f(
-			GetRowVector1().GetVector3f(),
-			GetRowVector2().GetVector3f(),
-			GetRowVector3().GetVector3f()
-		);
-	}
-
-	Matrix4x4f Transpose()const {
-		return Matrix4x4f(
-			GetColumnVector1(),
-			GetColumnVector2(),
-			GetColumnVector3(),
-			GetColumnVector4()
-		);
-	}
-
-	Matrix3x3f Minor(size_t i, size_t j)const {
-		std::vector<std::vector<float>> matrix = {
-			{ a1, a2, a3, a4 },
-			{ b1, b2, b3, b4 },
-			{ c1, c2, c3, c4 },
-			{ d1, d2, d3, d4 }
-		}; 
-		matrix.erase(matrix.begin() + i);
-		for (auto& row : matrix) {
-			row.erase(row.begin() + j);
-		}
-		return Matrix3x3f(
-			Vector3f(matrix[0][0], matrix[0][1], matrix[0][2]),
-			Vector3f(matrix[1][0], matrix[1][1], matrix[1][2]),
-			Vector3f(matrix[2][0], matrix[2][1], matrix[2][2])
-		);
-	}
-
-	float Determinant()const {
-		return a1 * Minor(0, 0).Determinant() - a2 * Minor(0, 1).Determinant() + a3 * Minor(0, 2).Determinant() - a4 * Minor(0, 3).Determinant();
-	}
-
-	Matrix4x4f Adjoint()const {
-		return Matrix4x4f(
-			Vector4f(Minor(0, 0).Determinant(), -Minor(0, 1).Determinant(), Minor(0, 2).Determinant(), -Minor(0, 3).Determinant()),
-			Vector4f(Minor(1, 0).Determinant(), -Minor(1, 1).Determinant(), Minor(1, 2).Determinant(), -Minor(1, 3).Determinant()),
-			Vector4f(Minor(2, 0).Determinant(), -Minor(2, 1).Determinant(), Minor(2, 2).Determinant(), -Minor(2, 3).Determinant()),
-			Vector4f(Minor(3, 0).Determinant(), -Minor(3, 1).Determinant(), Minor(3, 2).Determinant(), -Minor(3, 3).Determinant())
-		);
-	}
-
-	Matrix4x4f Inverse()const;
-
-	Vector4f GetRowVector1()const { return Vector4f(a1, a2, a3, a4); }
-	Vector4f GetRowVector2()const { return Vector4f(b1, b2, b3, b4); }
-	Vector4f GetRowVector3()const { return Vector4f(c1, c2, c3, c4); }
-	Vector4f GetRowVector4()const { return Vector4f(d1, d2, d3, d4); }
-
-	Vector4f GetColumnVector1()const { return Vector4f(a1, b1, c1, d1); }
-	Vector4f GetColumnVector2()const { return Vector4f(a2, b2, c2, d2); }
-	Vector4f GetColumnVector3()const { return Vector4f(a3, b3, c3, d3); }
-	Vector4f GetColumnVector4()const { return Vector4f(a4, b4, c4, d4); }
-
-	float a1 = 0.0f, a2 = 0.0f, a3 = 0.0f, a4 = 0.0f;
-	float b1 = 0.0f, b2 = 0.0f, b3 = 0.0f, b4 = 0.0f;
-	float c1 = 0.0f, c2 = 0.0f, c3 = 0.0f, c4 = 0.0f;
-	float d1 = 0.0f, d2 = 0.0f, d3 = 0.0f, d4 = 0.0f;
-};
-
-Matrix4x4f operator+(const Matrix4x4f m0, const Matrix4x4f m1) {
-	return Matrix4x4f(
-		m0.GetRowVector1() + m1.GetRowVector1(),
-		m0.GetRowVector2() + m1.GetRowVector2(),
-		m0.GetRowVector3() + m1.GetRowVector3(),
-		m0.GetRowVector4() + m1.GetRowVector4()
-	);
-}
-
-Matrix4x4f operator*(float a, Matrix4x4f m) {
-	return Matrix4x4f(
-		a * m.GetRowVector1(),
-		a * m.GetRowVector2(),
-		a * m.GetRowVector3(),
-		a * m.GetRowVector4()
 	);
 }
 
@@ -471,6 +297,70 @@ Vector4f Multiply(Vector4f v, Matrix4x4f m) {
 		Dot(v, m.GetColumnVector3()),
 		Dot(v, m.GetColumnVector4())
 	);
+}
+
+float Matrix3x3f::Determinant()const {
+	return a1 * (b2 * c3 - b3 * c2) - a2 * (b1 * c3 - b3 * c1) + a3 * (b1 * c2 - b2 * c1);
+}
+
+float Matrix4x4f::Determinant()const {
+	return a1 * Minor(0, 0).Determinant() - a2 * Minor(0, 1).Determinant() + a3 * Minor(0, 2).Determinant() - a4 * Minor(0, 3).Determinant();
+}
+
+Matrix3x3f Matrix3x3f::Transpose()const {
+	return Matrix3x3f(
+		GetColumnVector1(),
+		GetColumnVector2(),
+		GetColumnVector3()
+	);
+}
+
+Matrix4x4f Matrix4x4f::Transpose()const {
+	return Matrix4x4f(
+		GetColumnVector1(),
+		GetColumnVector2(),
+		GetColumnVector3(),
+		GetColumnVector4()
+	);
+}
+
+Matrix3x3f Matrix4x4f::Minor(size_t i, size_t j)const {
+	std::vector<std::vector<float>> matrix = {
+		{ a1, a2, a3, a4 },
+		{ b1, b2, b3, b4 },
+		{ c1, c2, c3, c4 },
+		{ d1, d2, d3, d4 }
+	};
+	matrix.erase(matrix.begin() + i);
+	for (auto& row : matrix) {
+		row.erase(row.begin() + j);
+	}
+	return Matrix3x3f(
+		Vector3f(matrix[0][0], matrix[0][1], matrix[0][2]),
+		Vector3f(matrix[1][0], matrix[1][1], matrix[1][2]),
+		Vector3f(matrix[2][0], matrix[2][1], matrix[2][2])
+	);
+}
+
+Matrix3x3f Matrix3x3f::Adjoint()const {
+	return Matrix3x3f(
+		Vector3f(b2 * c3 - b3 * c2, -b1 * c3 + b3 * c1, b1 * c2 - b2 * c1),
+		Vector3f(-a2 * c3 + a3 * c2, a1 * c3 - a3 * c1, -a1 * c2 + a2 * c1),
+		Vector3f(a2 * b3 - a3 * b2, -a1 * b3 + a3 * b1, a1 * b2 - a2 * b1)
+	);
+}
+
+Matrix4x4f Matrix4x4f::Adjoint()const {
+	return Matrix4x4f(
+		Vector4f(Minor(0, 0).Determinant(), -Minor(0, 1).Determinant(), Minor(0, 2).Determinant(), -Minor(0, 3).Determinant()),
+		Vector4f(Minor(1, 0).Determinant(), -Minor(1, 1).Determinant(), Minor(1, 2).Determinant(), -Minor(1, 3).Determinant()),
+		Vector4f(Minor(2, 0).Determinant(), -Minor(2, 1).Determinant(), Minor(2, 2).Determinant(), -Minor(2, 3).Determinant()),
+		Vector4f(Minor(3, 0).Determinant(), -Minor(3, 1).Determinant(), Minor(3, 2).Determinant(), -Minor(3, 3).Determinant())
+	);
+}
+
+Matrix3x3f Matrix3x3f::Inverse()const {
+	return 1.0f / Determinant() * Adjoint();
 }
 
 Matrix4x4f Matrix4x4f::Inverse()const {
@@ -558,4 +448,24 @@ Matrix4x4f PerspectiveProjection(float l, float r, float t, float b, float n, fl
 		Vector4f(0.0f, 0.0f, -n * f, 0.0f)
 	);
 	return Multiply(perspToOrtho, OrthograpicProjection(l, r, t, b, n, f));
+}
+
+Vector3f CalcBarycentric(Vector2f v0, Vector2f v1, Vector2f v2, Vector2f p) {
+	float Ux = v1.x - v0.x;
+	float Uy = v1.y - v0.y;
+	float Vx = v2.x - v0.x;
+	float Vy = v2.y - v0.y;
+	float POx = v0.x - p.x;
+	float POy = v0.y - p.y;
+
+	Vector3f kAB1 = Cross(Vector3f(Ux, Vx, POx), Vector3f(Uy, Vy, POy));
+
+	if (abs(kAB1.z) < 1.0f) {
+		return Vector3f(-1.0f, 1.0f, 1.0f);
+	}
+
+	float A = kAB1.x / kAB1.z;
+	float B = kAB1.y / kAB1.z;
+
+	return Vector3f(1.0f - A - B, A, B);
 }

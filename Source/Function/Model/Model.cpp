@@ -1,53 +1,13 @@
-#pragma once
-#include "assimp/scene.h"
-#include "assimp/Importer.hpp"
-#include "assimp/postprocess.h"
-#include "assimp/mesh.h"
-#include "assimp/texture.h"
-#include "Render.h"
-#include <vector>
+#include "Model.h"
 
-struct MaterialInfo {
-	int diffuseMaps;
-};
-
-class Mesh {
-public:
-	struct RenderInfo {
-		std::vector<Vertex> vertices;
-		std::vector<int> indices;
-	};
-
-	std::vector<Vertex> vertices;
-	std::vector<int> indices;
-	int materialIndex;
-	
-	Mesh(std::vector<Vertex> vertices, std::vector<int> indices, int materialIndex) {
-		this->vertices = vertices;
-		this->indices = indices;
-		this->materialIndex = materialIndex;
-	}
-};
-
-class Model {
-public:
-	Model(std::string path);
-	std::vector<Mesh> meshes;
-	std::vector<MaterialInfo> materials;
-	std::vector<Mesh::RenderInfo> renderInfo;
-	std::vector<std::string> texturePath;
-
-private:
-	std::string directory;
-
-	void ProcessNode(const aiScene* scene, aiNode* node);
-	Mesh ProcessMesh(const aiScene* scene, aiMesh* mesh);
-	int SetupMaterial(std::vector<int> diffuseMaps);
-	void SetupRenderInfo();
-	std::vector<int> LoadMaterialTextures(aiMaterial* mat, aiTextureType type);
-};
-
-bool CompareMaterial(MaterialInfo dest, MaterialInfo source);
+bool CompareMaterial(MaterialInfo dest, MaterialInfo source) {
+	bool isSame = false;
+	if (dest.diffuseMaps == source.diffuseMaps)
+		isSame = true;
+	else
+		isSame = false;
+	return isSame;
+}
 
 Model::Model(std::string path) {
 	Assimp::Importer importer;
@@ -58,14 +18,12 @@ Model::Model(std::string path) {
 }
 
 void Model::ProcessNode(const aiScene* scene, aiNode* node) {
-	for (size_t i = 0; i < node->mNumMeshes; i++)
-	{
+	for (size_t i = 0; i < node->mNumMeshes; i++) {
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
 		meshes.push_back(ProcessMesh(scene, mesh));
 	}
 
-	for (size_t i = 0; i < node->mNumChildren; i++)
-	{
+	for (size_t i = 0; i < node->mNumChildren; i++) {
 		ProcessNode(scene, node->mChildren[i]);
 	}
 }
@@ -80,7 +38,7 @@ Mesh Model::ProcessMesh(const aiScene* scene, aiMesh* mesh) {
 		vertex.position.y = mesh->mVertices[i].y;
 		vertex.position.z = mesh->mVertices[i].z;
 		vertex.position.w = 1.0f;
-		
+
 		vertex.color = Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
 
 		vertex.normal.x = mesh->mNormals[i].x;
@@ -178,13 +136,4 @@ void Model::SetupRenderInfo() {
 
 		renderInfo[index].vertices.insert(renderInfo[index].vertices.end(), meshes[i].vertices.begin(), meshes[i].vertices.end());
 	}
-}
-
-bool CompareMaterial(MaterialInfo dest, MaterialInfo source) {
-	bool isSame = false;
-	if (dest.diffuseMaps == source.diffuseMaps)
-		isSame = true;
-	else
-		isSame = false;
-	return isSame;
 }
