@@ -67,8 +67,8 @@ bool Pipeline::CullFace(Vector2i v0, Vector2i v1, Vector2i v2)const {
 	Vector3f v02 = Vector3f(v2.x - v0.x, v2.y - v0.y, 0.0f);
 	Vector3f cross = Cross(v01, v02);
 	if (cross.z > 0.0f)
-		return false;                     //ÄæÊ±ÕëÈÆĞò£¬²»ÌŞ³ı
-	return true;                          //Ë³Ê±ÕëÈÆĞò£¬ÌŞ³ı
+		return false;                     //é€†æ—¶é’ˆç»•åºï¼Œä¸å‰”é™¤
+	return true;                          //é¡ºæ—¶é’ˆç»•åºï¼Œå‰”é™¤
 }
 
 Matrix4x4f Pipeline::ScreenSpaceMatrix()const {
@@ -332,65 +332,6 @@ void GouraudShaderPipeline::DrawData(Vertex** vertices, size_t count) {
 					}
 				}
 			}
-			/*float dx = 1.0f / width, dy = 1.0f / height;
-
-			for (int y = minY; y <= maxY; y += 2) {
-				for (int x = minX; x <= maxX; x += 2) {
-					Vector3f mass[4];
-					Vector2f texCoord[4];
-					mass[0] = CalcBarycentric(x0, y0, x1, y1, x2, y2, x, y);
-					mass[1] = CalcBarycentric(x0, y0, x1, y1, x2, y2, x + 1, y);
-					mass[2] = CalcBarycentric(x0, y0, x1, y1, x2, y2, x, y + 1);
-					mass[3] = CalcBarycentric(x0, y0, x1, y1, x2, y2, x + 1, y + 1);
-					texCoord[0] = PerspectiveCorrectInterpolate(z[0], z[1], z[2], texCoord0, texCoord1, texCoord2, mass[0].y, mass[0].z);
-					texCoord[1] = PerspectiveCorrectInterpolate(z[0], z[1], z[2], texCoord0, texCoord1, texCoord2, mass[1].y, mass[1].z);
-					texCoord[2] = PerspectiveCorrectInterpolate(z[0], z[1], z[2], texCoord0, texCoord1, texCoord2, mass[2].y, mass[2].z);
-					texCoord[3] = PerspectiveCorrectInterpolate(z[0], z[1], z[2], texCoord0, texCoord1, texCoord2, mass[3].y, mass[3].z);
-
-					float Lx0 = powf(texCoord[0].x / dx - texCoord[1].x / dx, 2.0f) + powf(texCoord[0].y / dy - texCoord[1].y / dy, 2.0f);
-					float Lx1 = powf(texCoord[2].x / dx - texCoord[3].x / dx, 2.0f) + powf(texCoord[2].y / dy - texCoord[3].y / dy, 2.0f);
-					float Ly0 = powf(texCoord[0].x / dx - texCoord[2].x / dx, 2.0f) + powf(texCoord[0].y / dy - texCoord[2].y / dy, 2.0f);
-					float Ly1 = powf(texCoord[1].x / dx - texCoord[3].x / dx, 2.0f) + powf(texCoord[1].y / dy - texCoord[3].y / dy, 2.0f);
-
-					for (int i = 0; i < 4; i++) {
-						if (!(mass[i].x >= -1e-5f && mass[i].y >= -1e-5f && mass[i].z >= -1e-5f))continue;
-						if (x >= width || x < 0 || y >= height || y < 0)continue;
-						float depth = mass[i].x * vertices[indices[0]].position.z + mass[i].y * vertices[indices[1]].position.z + mass[i].z * vertices[indices[2]].position.z;
-						if (!DepthTest(i % 2 == 0 ? x : x + 1, i < 2 ? y : y + 1, depth))continue;
-
-						float L;
-						switch (i) {
-						case 0:
-							L = sqrtf(Lx0 > Ly0 ? Lx0 : Ly0);
-							break;
-						case 1:
-							L = sqrtf(Lx0 > Ly1 ? Lx0 : Ly1);
-							break;
-						case 2:
-							L = sqrtf(Lx1 > Ly0 ? Lx1 : Ly0);
-							break;
-						case 3:
-							L = sqrtf(Lx1 > Ly1 ? Lx1 : Ly1);
-						}
-
-						float mipLevel = logf(L);
-						int mipLevel0 = mipLevel;
-
-						Vector4f color;
-						if (mipLevel - mipLevel0 != 0.0f) {
-							float percent = mipLevel - mipLevel0;
-							Vector4f color0 = texture[mipLevel0].SampleBilinear(texCoord[i].x, texCoord[i].y);
-							Vector4f color1 = texture[mipLevel0 + 1].SampleBilinear(texCoord[i].x, texCoord[i].y);
-							color = Lerp(color0, color1, percent);
-						}
-						else
-							color = texture[mipLevel0].SampleBilinear(texCoord[i].x, texCoord[i].y);
-
-						mipLevel = mipLevel > maxMipLevel ? maxMipLevel : mipLevel;
-						DrawPixel(renderer, i % 2 == 0 ? x : x + 1, i < 2 ? y : y + 1, color);
-					}
-				}
-			}*/
 		}
 		break;
 	}
