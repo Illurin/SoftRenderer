@@ -174,6 +174,22 @@ void Draw(size_t baseVertexOffset, size_t count);
 void DrawIndexed(size_t indexOffset, size_t baseVertexOffset, size_t count);
 ```
 
+### 渲染器 Renderer
+
+渲染器接入了SDL库，可以将framebuffer存储的颜色数据最终显示在屏幕上。
+
+创建Renderer对象的方法：
+
+```C++
+Renderer(SDL_Window* window);
+```
+
+将framebuffer呈现在屏幕上的方法：
+
+```C++
+void Present(Pipeline* pipeline)const;
+```
+
 ## 数学库 Math
 
 数学库采用行主序存储和右乘结合，内置了基本的向量和矩阵运算功能，支持的类型：
