@@ -67,8 +67,8 @@ bool Pipeline::CullFace(Vector2i v0, Vector2i v1, Vector2i v2)const {
 	Vector3f v02 = Vector3f(v2.x - v0.x, v2.y - v0.y, 0.0f);
 	Vector3f cross = Cross(v01, v02);
 	if (cross.z > 0.0f)
-		return false;                     //ÈÄÜÊó∂ÈíàÁªïÂ∫èÔºå‰∏çÂâîÈô§
-	return true;                          //È°∫Êó∂ÈíàÁªïÂ∫èÔºåÂâîÈô§
+		return false;                     //ƒÊ ±’Î»∆–Ú£¨≤ªÃﬁ≥˝
+	return true;                          //À≥ ±’Î»∆–Ú£¨Ãﬁ≥˝
 }
 
 Matrix4x4f Pipeline::ScreenSpaceMatrix()const {
@@ -219,14 +219,14 @@ void GouraudShaderPipeline::DrawData(Vertex** vertices, size_t count) {
 
 			float worldZ[3];
 
-			for (size_t i = 0; i < 3; i++) {
-				worldZ[i] = position[i].z;
-				position[i].x /= position[i].w;
-				position[i].y /= position[i].w;
-				position[i].z /= position[i].w;
-				position[i].w = 1.0f;
+			for (size_t j = 0; j < 3; j++) {
+				worldZ[j] = position[j].z;
+				position[j].x /= position[j].w;
+				position[j].y /= position[j].w;
+				position[j].z /= position[j].w;
+				position[j].w = 1.0f;
 
-				position[i] = Multiply(position[i], ScreenSpaceMatrix());
+				position[j] = Multiply(position[j], ScreenSpaceMatrix());
 			}
 
 			int x0 = position[0].x + 0.5f, y0 = position[0].y + 0.5f;
@@ -245,77 +245,78 @@ void GouraudShaderPipeline::DrawData(Vertex** vertices, size_t count) {
 			if (x2 > maxX) maxX = x2;
 			if (y2 > maxY) maxY = y2;
 
+			std::vector<Vector2f> offsets;
+			switch (sampleCount) {
+			case SampleCount::Count1: {
+				offsets.push_back(Vector2f(0.0f, 0.0f));
+				break;
+			}
+			case SampleCount::Count2: {
+				constexpr float offset = 0.25f;
+				offsets.push_back(Vector2f(-offset, -offset));
+				offsets.push_back(Vector2f(+offset, +offset));
+				break;
+			}
+			case SampleCount::Count4: {
+				constexpr float offset[] = { 6.0f / 16.0f, 2.0f / 16.0f };
+				offsets.push_back(Vector2f(-offset[1], -offset[0]));
+				offsets.push_back(Vector2f(+offset[0], -offset[1]));
+				offsets.push_back(Vector2f(-offset[0], +offset[1]));
+				offsets.push_back(Vector2f(+offset[1], +offset[0]));
+				break;
+			}
+			case SampleCount::Count8: {
+				constexpr float offset[] = { 1.0f / 16.0f, 3.0f / 16.0f, 5.0f / 16.0f, 7.0f / 16.0f };
+				offsets.push_back(Vector2f(-offset[3], -offset[0]));
+				offsets.push_back(Vector2f(-offset[1], -offset[2]));
+				offsets.push_back(Vector2f(+offset[0], -offset[1]));
+				offsets.push_back(Vector2f(+offset[3], -offset[3]));
+				offsets.push_back(Vector2f(-offset[2], +offset[2]));
+				offsets.push_back(Vector2f(-offset[0], +offset[1]));
+				offsets.push_back(Vector2f(+offset[1], +offset[3]));
+				offsets.push_back(Vector2f(+offset[2], +offset[0]));
+				break;
+			}
+			case SampleCount::Count16: {
+				constexpr float offset[] = { 1.0f / 16.0f, 2.0f / 16.0f, 3.0f / 16.0f, 4.0f / 16.0f, 5.0f / 16.0f, 6.0f / 16.0f, 7.0f / 16.0f, 0.5f };
+				offsets.push_back(Vector2f(-offset[6], -offset[7]));
+				offsets.push_back(Vector2f(-offset[4], -offset[1]));
+				offsets.push_back(Vector2f(-offset[3], -offset[5]));
+				offsets.push_back(Vector2f(-offset[0], -offset[2]));
+
+				offsets.push_back(Vector2f(0.0f, -offset[6]));
+
+				offsets.push_back(Vector2f(+offset[2], -offset[4]));
+				offsets.push_back(Vector2f(+offset[3], -offset[0]));
+				offsets.push_back(Vector2f(+offset[6], -offset[3]));
+
+				offsets.push_back(Vector2f(-offset[7], 0.0f));
+
+				offsets.push_back(Vector2f(-offset[5], +offset[3]));
+				offsets.push_back(Vector2f(-offset[2], +offset[1]));
+				offsets.push_back(Vector2f(-offset[1], +offset[5]));
+
+				offsets.push_back(Vector2f(+offset[0], +offset[0]));
+				offsets.push_back(Vector2f(+offset[1], +offset[4]));
+				offsets.push_back(Vector2f(+offset[4], +offset[2]));
+				offsets.push_back(Vector2f(+offset[5], +offset[6]));
+				break;
+			}
+			}
+
 			for (int y = minY; y <= maxY; y++) {
 				for (int x = minX; x <= maxX; x++) {
-					if (x >= width || x < 0 || y >= height || y < 0)continue;
-
-					std::vector<Vector2f> coords;
-					switch (sampleCount) {
-					case SampleCount::Count1: {
-						coords.push_back(Vector2f(x, y));
-						break;
-					}
-					case SampleCount::Count2: {
-						constexpr float offset = 0.25f;
-						coords.push_back(Vector2f(x - offset, y - offset));
-						coords.push_back(Vector2f(x + offset, y + offset));
-						break;
-					}
-					case SampleCount::Count4: {
-						constexpr float offset[] = { 6.0f / 16.0f, 2.0f / 16.0f };
-						coords.push_back(Vector2f(x - offset[1], y - offset[0]));
-						coords.push_back(Vector2f(x + offset[0], y - offset[1]));
-						coords.push_back(Vector2f(x - offset[0], y + offset[1]));
-						coords.push_back(Vector2f(x + offset[1], y + offset[0]));
-						break;
-					}
-					case SampleCount::Count8: {
-						constexpr float offset[] = { 1.0f / 16.0f, 3.0f / 16.0f, 5.0f / 16.0f, 7.0f / 16.0f };
-						coords.push_back(Vector2f(x - offset[3], y - offset[0]));
-						coords.push_back(Vector2f(x - offset[1], y - offset[2]));
-						coords.push_back(Vector2f(x + offset[0], y - offset[1]));
-						coords.push_back(Vector2f(x + offset[3], y - offset[3]));
-						coords.push_back(Vector2f(x - offset[2], y + offset[2]));
-						coords.push_back(Vector2f(x - offset[0], y + offset[1]));
-						coords.push_back(Vector2f(x + offset[1], y + offset[3]));
-						coords.push_back(Vector2f(x + offset[2], y + offset[0]));
-						break;
-					}
-					case SampleCount::Count16: {
-						constexpr float offset[] = { 1.0f / 16.0f, 2.0f / 16.0f, 3.0f / 16.0f, 4.0f / 16.0f, 5.0f / 16.0f, 6.0f / 16.0f, 7.0f / 16.0f, 0.5f };
-						coords.push_back(Vector2f(x - offset[6], y - offset[7]));
-						coords.push_back(Vector2f(x - offset[4], y - offset[1]));
-						coords.push_back(Vector2f(x - offset[3], y - offset[5]));
-						coords.push_back(Vector2f(x - offset[0], y - offset[2]));
-
-						coords.push_back(Vector2f(x, y - offset[6]));
-
-						coords.push_back(Vector2f(x + offset[2], y - offset[4]));
-						coords.push_back(Vector2f(x + offset[3], y - offset[0]));
-						coords.push_back(Vector2f(x + offset[6], y - offset[3]));
-
-						coords.push_back(Vector2f(x - offset[7], y));
-
-						coords.push_back(Vector2f(x - offset[5], y + offset[3]));
-						coords.push_back(Vector2f(x - offset[2], y + offset[1]));
-						coords.push_back(Vector2f(x - offset[1], y + offset[5]));
-
-						coords.push_back(Vector2f(x + offset[0], y + offset[0]));
-						coords.push_back(Vector2f(x + offset[1], y + offset[4]));
-						coords.push_back(Vector2f(x + offset[4], y + offset[2]));
-						coords.push_back(Vector2f(x + offset[5], y + offset[6]));
-						break;
-					}
-					}
-
 					Vector4f finalColor;
 					bool detected = false;
 
-					for (int i = 0; i < coords.size(); i++) {
-						Vector3f mass = CalcBarycentric(Vector2f(x0, y0), Vector2f(x1, y1), Vector2f(x2, y2), coords[i]);
+					for (size_t sample = 0; sample < offsets.size(); sample++) {
+						Vector2f coord = Vector2f(x, y) + offsets[sample] ;
+						if (coord.x >= width || coord.x < 0 || coord.y >= height || coord.y < 0) continue;
+
+						Vector3f mass = CalcBarycentric(Vector2f(x0, y0), Vector2f(x1, y1), Vector2f(x2, y2), coord);
 						if (mass.x >= -1e-5f && mass.y >= -1e-5f && mass.z >= -1e-5f) {
 							float depth = mass.x * position[0].z + mass.y * position[1].z + mass.z * position[2].z;
-							if (!DepthTest(x, y, i, depth)) continue;
+							if (!DepthTest(x, y, sample, depth)) continue;
 
 							if (!detected) {
 								GouraudShader::FragmentInput finalInput;
@@ -327,7 +328,7 @@ void GouraudShaderPipeline::DrawData(Vertex** vertices, size_t count) {
 								detected = true;
 							}
 
-							WriteFramebuffer(x, y, i, finalColor);
+							WriteFramebuffer(x, y, sample, finalColor);
 						}
 					}
 				}
